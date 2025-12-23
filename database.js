@@ -1,14 +1,26 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 class Database {
   constructor() {
-    const dbPath = path.join(__dirname, 'bookings.db');
+    // Use /tmp directory for Vercel serverless functions
+    const dbDir = process.env.VERCEL ? '/tmp' : __dirname;
+    const dbPath = path.join(dbDir, 'bookings.db');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Error opening database:', err);
       } else {
-        console.log('Connected to SQLite database');
+        console.log('Connected to SQLite database at:', dbPath);
+        if (process.env.VERCEL) {
+          console.warn('⚠️  Running on Vercel: Database will reset on each deployment!');
+        }
         this.initializeTables();
       }
     });

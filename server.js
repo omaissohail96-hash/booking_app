@@ -9,8 +9,39 @@ const app = express();
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000;
 const MAX_PORT_RETRIES = 5;
 
+// CORS configuration for Vercel
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow Vercel domains and localhost
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      /\.vercel\.app$/,  // All Vercel preview and production domains
+    ];
+    
+    const isAllowed = allowedOrigins.some(pattern => {
+      if (pattern instanceof RegExp) {
+        return pattern.test(origin);
+      }
+      return pattern === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now, restrict in production if needed
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 // Middleware - ORDER MATTERS! Body parsing must come before routes
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Body parsing middleware - MUST be before routes
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
@@ -81,6 +112,9 @@ function startServer(port, attemptsLeft = MAX_PORT_RETRIES) {
   });
 }
 
-startServer(DEFAULT_PORT);
+// Only start server if not in serverless environment (Vercel)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  startServer(DEFAULT_PORT);
+}
 
 module.exports = app;
