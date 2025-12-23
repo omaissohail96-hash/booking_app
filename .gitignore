@@ -9,6 +9,9 @@ node_modules/
 *.sqlite
 *.sqlite3
 
+# Vercel
+.vercel
+
 # Logs
 logs
 *.log
