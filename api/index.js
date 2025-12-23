@@ -514,10 +514,39 @@ router.get('/config', (req, res) => {
 
 /**
  * GET /health
- * Health check endpoint
+ * Health check endpoint with database connection test
  */
-router.get('/health', (req, res) => {
-  res.json({ success: true, status: 'healthy', timestamp: new Date().toISOString() });
+router.get('/health', async (req, res) => {
+  try {
+    // Test database connection by counting bookings
+    const bookings = await database.getAllBookings();
+    const completedBookings = await database.getAllCompletedBookings();
+    const cancelledBookings = await database.getAllCancelledBookings();
+    
+    res.json({ 
+      success: true, 
+      status: 'healthy',
+      database: {
+        connected: true,
+        activeBookings: bookings.length,
+        completedBookings: completedBookings.length,
+        cancelledBookings: cancelledBookings.length,
+        totalRecords: bookings.length + completedBookings.length + cancelledBookings.length
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(503).json({ 
+      success: false, 
+      status: 'unhealthy',
+      database: {
+        connected: false,
+        error: error.message
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 module.exports = router;
