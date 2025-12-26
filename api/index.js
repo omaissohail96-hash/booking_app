@@ -1,5 +1,5 @@
 const express = require('express');
-const database = require('../database');
+const database = require('../database.pg');
 const bookingValidator = require('../services/bookingValidator');
 const config = require('../config');
 
@@ -546,6 +546,20 @@ router.get('/health', async (req, res) => {
       },
       timestamp: new Date().toISOString()
     });
+  }
+});
+
+/**
+ * GET /test-db
+ * Simple database connectivity test
+ */
+router.get('/test-db', async (req, res) => {
+  try {
+    const result = await database.query('SELECT 1 AS ok');
+    res.json({ success: true, ok: result.rows?.[0]?.ok === 1 });
+  } catch (error) {
+    console.error('DB test failed:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

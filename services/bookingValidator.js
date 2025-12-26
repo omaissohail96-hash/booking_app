@@ -1,5 +1,5 @@
 const mapsService = require('./mapsService');
-const database = require('../database');
+const database = require('../database.pg');
 const config = require('../config');
 
 /**
