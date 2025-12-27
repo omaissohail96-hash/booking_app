@@ -12,6 +12,7 @@ body {
     padding: 20px;
     line-height: 1.6;
     color: #333;
+    overflow-x: hidden;
 }
 
 .container {
@@ -21,6 +22,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+    width: 100%;
 }
 
 /* Header */
@@ -856,6 +858,18 @@ small {
 
 /* Responsive */
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        border-radius: 10px;
+    }
+    
+    .header {
+        padding: 20px 15px;
+    }
+    
     .header h1 {
         font-size: 1.8rem;
     }
@@ -863,6 +877,24 @@ small {
     .service-info {
         flex-direction: column;
         gap: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .main-content {
+        padding: 15px;
+        gap: 20px;
+    }
+    
+    .booking-form-section,
+    .calendar-section,
+    .week-plan-section,
+    .bookings-section {
+        padding: 20px 15px;
+    }
+    
+    /* Hide calendar section on mobile */
+    .calendar-section {
+        display: none;
     }
     
     .form-row {
@@ -884,5 +916,18 @@ small {
     .calendar-day {
         font-size: 0.75rem;
         padding: 4px;
+    }
+    
+    h2 {
+        font-size: 1.2rem;
+    }
+    
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px; /* Prevent zoom on iOS */
     }
 }
