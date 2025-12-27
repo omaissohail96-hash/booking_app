@@ -93,16 +93,19 @@ router.get('/bookings/range/:startDate/:endDate', async (req, res) => {
 
 /**
  * GET /bookings/week
- * Get bookings for the current week (Mon-Sun) or a specified weekStart
+ * Get bookings for the next 30 days starting from today or a specified startDate
  */
 router.get('/bookings/week', async (req, res) => {
   try {
-    const baseDate = req.query.weekStart ? normalizeDate(req.query.weekStart) : new Date();
+    const baseDate = req.query.startDate ? normalizeDate(req.query.startDate) : new Date();
     if (!baseDate || Number.isNaN(baseDate.getTime())) {
-      return res.status(400).json({ success: false, error: 'Invalid weekStart date' });
+      return res.status(400).json({ success: false, error: 'Invalid startDate' });
     }
 
-    const { start, end } = getWeekRange(baseDate);
+    const start = normalizeDate(baseDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 29); // Next 30 days
+    
     const startStr = formatDate(start);
     const endStr = formatDate(end);
 
@@ -118,7 +121,7 @@ router.get('/bookings/week', async (req, res) => {
     const days = [];
     const mapsService = require('../services/mapsService');
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 30; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
       const dateStr = formatDate(date);
@@ -176,14 +179,15 @@ router.get('/bookings/week', async (req, res) => {
     res.json({
       success: true,
       data: {
-        weekStart: startStr,
-        weekEnd: endStr,
+        startDate: startStr,
+        endDate: endStr,
+        totalDays: 30,
         days
       }
     });
   } catch (error) {
-    console.error('Error fetching weekly bookings:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch weekly bookings' });
+    console.error('Error fetching 30-day schedule:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch schedule' });
   }
 });
 
@@ -313,6 +317,9 @@ router.post('/bookings', async (req, res) => {
       });
     }
 
+    // Ensure date is in YYYY-MM-DD format to prevent timezone issues
+    const bookingDate = formatDate(normalizeDate(bookingRequest.booking_date));
+    
     const newBooking = {
       customer_name: bookingRequest.customer_name,
       customer_phone: bookingRequest.customer_phone || null,
@@ -320,7 +327,7 @@ router.post('/bookings', async (req, res) => {
       address: validationResult.geocode.formatted_address,
       latitude: validationResult.geocode.lat,
       longitude: validationResult.geocode.lng,
-      booking_date: bookingRequest.booking_date,
+      booking_date: bookingDate,
       booking_time: bookingRequest.booking_time || '09:00',
       service_type: bookingRequest.service_type || 'standard',
       distance_from_lowell: validationResult.distanceFromLowell,

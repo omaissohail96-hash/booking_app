@@ -433,18 +433,32 @@ small {
 
 .week-plan-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 8px;
 }
 
 .week-day-card {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
+    padding: 15px;
+    border-radius: 10px;
     border: 2px solid #e0e0e0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.week-day-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.week-day-card.expanded {
+    border-color: #667eea;
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
 }
 
 .week-day-card.off-day {
@@ -453,14 +467,48 @@ small {
     color: #888;
 }
 
+.week-day-card.off-day.partial {
+    background: #fff3e0;
+    border-style: solid;
+    border-color: #ff9800;
+    color: #333;
+}
+
+.week-day-card.off-day.partial.expanded {
+    box-shadow: 0 6px 16px rgba(255, 152, 0, 0.2);
+}
+
 .week-day-card.available {
     border-color: #4caf50;
     background: #e8f5e9;
 }
 
+.week-day-card.partial {
+    border-color: #ffc107;
+    background: #fff9e6;
+}
+
 .week-day-card.full {
     border-color: #f44336;
     background: #ffebee;
+}
+
+.week-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.week-day-header:hover {
+    opacity: 0.8;
+}
+
+.expand-icon {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+    color: #667eea;
+    font-weight: bold;
 }
 
 .week-day-card .week-day-title {
@@ -472,6 +520,32 @@ small {
 .week-day-card .week-day-status {
     font-size: 0.9rem;
     color: #555;
+    margin-top: 4px;
+}
+
+.week-day-card .anchor-preview {
+    font-size: 0.85rem;
+    color: #ff9800;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.week-day-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px dashed #e0e0e0;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
 }
 
 .week-day-card ul {
@@ -482,14 +556,59 @@ small {
     color: #555;
 }
 
-.week-day-card li + li {
-    margin-top: 6px;
+.booking-detail-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 3px solid #667eea;
+}
+
+.booking-detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.booking-time {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.booking-customer {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.booking-address {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.booking-phone,
+.booking-service {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.anchor-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-left: 6px;
 }
 
 .week-day-card .travel-info {
     background: #e8f4fd;
-    padding: 6px 10px;
-    margin: 8px 0 4px 0;
+    padding: 8px 12px;
+    margin: 0 0 8px 0;
     border-radius: 6px;
     font-size: 0.85rem;
     color: #1976d2;

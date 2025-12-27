@@ -14,25 +14,27 @@ class BookingValidator {
    */
   async validateBooking(bookingRequest) {
     const { address, booking_date } = bookingRequest;
-          if (!booking_date) {
-            return {
-              valid: false,
-              reason: 'missing_booking_date',
-              message: 'Please select a booking date.'
-            };
-          }
+    
+    // Validate required fields
+    if (!booking_date) {
+      return {
+        valid: false,
+        reason: 'missing_booking_date',
+        message: 'Please select a booking date.'
+      };
+    }
 
-          if (!this.isWorkingDay(booking_date)) {
-            const nextWorkingDate = this.formatDate(
-              this.shiftToWorkingDay(new Date(`${booking_date}T00:00:00`), false)
-            );
-            return {
-              valid: false,
-              reason: 'non_working_day',
-              message: 'We do not operate on weekends. Please choose a weekday.',
-              nextWorkingDate
-            };
-          }
+    if (!this.isWorkingDay(booking_date)) {
+      const nextWorkingDate = this.formatDate(
+        this.shiftToWorkingDay(new Date(`${booking_date}T00:00:00`), false)
+      );
+      return {
+        valid: false,
+        reason: 'non_working_day',
+        message: 'We do not operate on weekends. Please choose a weekday.',
+        nextWorkingDate
+      };
+    }
     
     try {
       // Step 1: Geocode the address

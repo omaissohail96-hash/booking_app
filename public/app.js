@@ -811,17 +811,17 @@ async function loadWeekPlan() {
         const result = await response.json();
 
         if (result.success) {
-            renderWeekPlan(result.data);
+            render30DaySchedule(result.data);
         } else {
-            renderWeekPlan(null, result.error || 'Unable to load week plan');
+            render30DaySchedule(null, result.error || 'Unable to load schedule');
         }
     } catch (error) {
-        console.error('Failed to load week plan:', error);
-        renderWeekPlan(null, 'Failed to load week plan');
+        console.error('Failed to load schedule:', error);
+        render30DaySchedule(null, 'Failed to load schedule');
     }
 }
 
-function renderWeekPlan(data, errorMessage) {
+function render30DaySchedule(data, errorMessage) {
     const container = document.getElementById('weekPlan');
     container.innerHTML = '';
 
@@ -831,7 +831,7 @@ function renderWeekPlan(data, errorMessage) {
     }
 
     if (!data || !data.days || !data.days.length) {
-        container.innerHTML = '<div class="no-bookings">No data for this week.</div>';
+        container.innerHTML = '<div class="no-bookings">No schedule data available.</div>';
         return;
     }
 
@@ -839,15 +839,18 @@ function renderWeekPlan(data, errorMessage) {
         const card = document.createElement('div');
         card.className = 'week-day-card';
 
-        if (!day.isWorkingDay) {
+        // Determine card class based on booking status
+        if (!day.isWorkingDay && day.bookingCount === 0) {
             card.classList.add('off-day');
-        } else if (day.bookingCount === 0) {
-            card.classList.add('available');
         } else if (day.isFull) {
             card.classList.add('full');
+        } else if (day.bookingCount > 0) {
+            card.classList.add('partial');
+        } else {
+            card.classList.add('available');
         }
 
-        const status = !day.isWorkingDay
+        const status = !day.isWorkingDay && day.bookingCount === 0
             ? 'Day off'
             : day.bookingCount === 0
                 ? 'Available'
@@ -855,14 +858,14 @@ function renderWeekPlan(data, errorMessage) {
 
         let bookingsList = '';
         if (day.bookingCount > 0) {
-            bookingsList = '<ul>' + day.bookings.map((booking, index) => {
-                const anchorBadge = booking.is_anchor ? ' (Anchor)' : '';
+            bookingsList = '<div class="week-day-details" style="display: none;"><ul>' + day.bookings.map((booking, index) => {
+                const anchorBadge = booking.is_anchor ? ' <span class="anchor-badge">⚓ Anchor</span>' : '';
                 let travelInfo = '';
                 
                 // Show travel time/distance from previous booking
                 if (index > 0 && booking.travel_from_previous) {
                     const travel = booking.travel_from_previous;
-                    travelInfo = `<div class="travel-info">🚗 ${travel.distance} mi · ⏱️ ${travel.duration} mins from previous</div>`;
+                    travelInfo = `<div class="travel-info">🚗 ${travel.distanceText} · ⏱️ ${travel.durationText} from previous</div>`;
                 }
                 
                 // Add action buttons for each booking in week plan
@@ -873,24 +876,54 @@ function renderWeekPlan(data, errorMessage) {
                     </div>
                 `;
                 
-                return `${travelInfo}<li>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            ${formatTime(booking.booking_time)} - ${booking.customer_name}${anchorBadge}<br>
-                            <small>${booking.address}</small>
+                return `${travelInfo}<li class="booking-detail-item">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                        <div style="flex: 1;">
+                            <div class="booking-time">${formatTime(booking.booking_time)}</div>
+                            <div class="booking-customer">${booking.customer_name}${anchorBadge}</div>
+                            <div class="booking-address">${booking.address}</div>
+                            ${booking.customer_phone ? `<div class="booking-phone">📞 ${booking.customer_phone}</div>` : ''}
+                            ${booking.service_type ? `<div class="booking-service">🔧 ${booking.service_type}</div>` : ''}
                         </div>
                         ${actionButtons}
                     </div>
                 </li>`;
-            }).join('') + '</ul>';
+            }).join('') + '</ul></div>';
         }
 
+        const expandIcon = day.bookingCount > 0 ? '<span class="expand-icon">▼</span>' : '';
+        
         card.innerHTML = `
-            <div class="week-day-title">${day.label}</div>
-            <div class="week-day-status">${status}</div>
-            ${day.hasAnchor && day.anchorAddress ? `<div class="week-day-status">⚓ ${day.anchorAddress}</div>` : ''}
+            <div class="week-day-header" ${day.bookingCount > 0 ? 'style="cursor: pointer;"' : ''}>
+                <div>
+                    <div class="week-day-title">${day.label}</div>
+                    <div class="week-day-status">${status}</div>
+                    ${day.hasAnchor && day.anchorAddress ? `<div class="anchor-preview">⚓ Route starts at ${day.anchorAddress.split(',')[0]}</div>` : ''}
+                </div>
+                ${expandIcon}
+            </div>
             ${bookingsList}
         `;
+
+        // Add click handler to toggle details for ANY day with bookings
+        if (day.bookingCount > 0) {
+            const header = card.querySelector('.week-day-header');
+            const details = card.querySelector('.week-day-details');
+            const expandIcon = card.querySelector('.expand-icon');
+            
+            // Make header clickable even for off-days
+            header.style.cursor = 'pointer';
+            
+            header.addEventListener('click', (e) => {
+                // Don't toggle if clicking on action buttons
+                if (e.target.closest('.week-booking-actions')) return;
+                
+                const isExpanded = details.style.display !== 'none';
+                details.style.display = isExpanded ? 'none' : 'block';
+                expandIcon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+                card.classList.toggle('expanded', !isExpanded);
+            });
+        }
 
         container.appendChild(card);
     });

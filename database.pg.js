@@ -109,14 +109,27 @@ class Database {
     return this.pool.query(text, params);
   }
 
+  // Helper to format dates in results to avoid timezone issues
+  formatBookingDate(booking) {
+    if (booking && booking.booking_date) {
+      const date = new Date(booking.booking_date);
+      booking.booking_date = date.toISOString().split('T')[0];
+    }
+    return booking;
+  }
+
+  formatBookingDates(bookings) {
+    return bookings.map(b => this.formatBookingDate(b));
+  }
+
   async getAllBookings() {
     const { rows } = await this.query('SELECT * FROM bookings ORDER BY booking_date, booking_time');
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getBookingsByDate(date) {
     const { rows } = await this.query('SELECT * FROM bookings WHERE booking_date = $1 ORDER BY booking_time', [date]);
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getBookingsByDateRange(startDate, endDate) {
@@ -124,12 +137,12 @@ class Database {
       'SELECT * FROM bookings WHERE booking_date >= $1 AND booking_date <= $2 ORDER BY booking_date, booking_time',
       [startDate, endDate]
     );
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getAnchorBooking(date) {
     const { rows } = await this.query('SELECT * FROM bookings WHERE booking_date = $1 AND is_anchor = TRUE', [date]);
-    return rows[0] || null;
+    return rows[0] ? this.formatBookingDate(rows[0]) : null;
   }
 
   async createBooking(booking) {
@@ -170,7 +183,7 @@ class Database {
     ];
 
     const { rows } = await this.query(insertSql, values);
-    return rows[0];
+    return this.formatBookingDate(rows[0]);
   }
 
   async updateBooking(id, booking) {
@@ -208,7 +221,7 @@ class Database {
     ];
 
     const { rows } = await this.query(updateSql, values);
-    return rows[0];
+    return this.formatBookingDate(rows[0]);
   }
 
   async deleteBooking(id) {
@@ -218,7 +231,7 @@ class Database {
 
   async getBookingById(id) {
     const { rows } = await this.query('SELECT * FROM bookings WHERE id = $1', [id]);
-    return rows[0] || null;
+    return rows[0] ? this.formatBookingDate(rows[0]) : null;
   }
 
   async cancelBooking(id) {
@@ -337,22 +350,22 @@ class Database {
 
   async getAllCompletedBookings() {
     const { rows } = await this.query('SELECT * FROM completed_bookings ORDER BY completed_at DESC');
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getCompletedBookingsByDate(date) {
     const { rows } = await this.query('SELECT * FROM completed_bookings WHERE booking_date = $1 ORDER BY booking_time', [date]);
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getAllCancelledBookings() {
     const { rows } = await this.query('SELECT * FROM cancelled_bookings ORDER BY cancelled_at DESC');
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async getCancelledBookingsByDate(date) {
     const { rows } = await this.query('SELECT * FROM cancelled_bookings WHERE booking_date = $1 ORDER BY booking_time', [date]);
-    return rows;
+    return this.formatBookingDates(rows);
   }
 
   async close() {
