@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCompletedBookings();
     loadCancelledBookings();
     setMinDate();
+    initializeWeekDayFilter();
 });
 
 // Set minimum date to today
@@ -89,6 +90,22 @@ function setMinDate() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('bookingDate').min = today;
     document.getElementById('bookingDate').value = today;
+}
+
+// Initialize week day filter
+function initializeWeekDayFilter() {
+    document.getElementById('weekDayFilter').addEventListener('change', (e) => {
+        const selectedDay = e.target.value;
+        const cards = document.querySelectorAll('.week-day-card');
+
+        cards.forEach(card => {
+            const title = card.querySelector('.week-day-title').innerText;
+            card.style.display =
+                selectedDay === 'all' || title.includes(selectedDay)
+                    ? 'block'
+                    : 'none';
+        });
+    });
 }
 
 // Initialize form handlers
